@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Setup Checklist — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#171719;
+    --ink-soft:#2D2E32;
+    --gray:#9B9B9B;
+    --gray-light:#D9D9D9;
+    --track:#EDECEA;
+    --orange:#FF5A12;
+    --orange-light:#FFEFE7;
+    --green:#1FA35C;
+    --green-light:#EAF8EF;
+    --white:#FFFFFF;
+    --border:#E5E3E0;
+    --bg:#F3F1EE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:#EDEBE8;
+    font-family:'Open Sans',sans-serif;
+  }
+
+  /* ---- app shell ---- */
+  .brand-label{
+    padding:18px 28px 8px;
+    font-size:20px;
+    font-weight:400;
+    color:#D3D1CD;
+  }
+  .app-window{
+    margin:0 24px 24px;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:0 24px 60px -28px rgba(20,20,25,.18);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:calc(100vh - 74px);
+  }
+  .app-topbar{
+    height:60px;
+    flex:0 0 60px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 26px;
+  }
+  .app-topbar .crumb{
+    font-size:19px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .app-topbar .icons{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    color:var(--gray);
+    font-size:13px;
+    font-weight:500;
+  }
+  .app-topbar .icons .icon-only{ display:flex; align-items:center; }
+  .app-topbar .icons .with-label{ display:flex; align-items:center; gap:5px; }
+  .app-topbar .icons .divider{ width:1px; height:18px; background:var(--border); }
+  .app-topbar .icons svg{ width:17px; height:17px; }
+  .app-topbar .icons .chev{ width:11px; height:11px; margin-left:1px; }
+
+  .app-body{
+    flex:1;
+    display:flex;
+    min-height:0;
+  }
+  .app-sidebar{
+    width:296px;
+    flex:0 0 296px;
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:20px 16px;
+    transition:width .25s ease, flex-basis .25s ease;
+    overflow:hidden;
+  }
+  .app-sidebar.collapsed{ width:72px; flex-basis:72px; }
+
+  .sidebar-brand{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:2px 6px 20px;
+    white-space:nowrap;
+  }
+  .sidebar-brand .logo-mark{
+    width:28px; height:28px;
+    flex:0 0 28px;
+    border-radius:8px;
+    background:linear-gradient(135deg,#FF8A4C,var(--orange));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .sidebar-brand .logo-mark svg{ width:16px; height:16px; color:#fff; }
+  .sidebar-brand .name-block{ display:flex; flex-direction:column; line-height:1.15; }
+  .sidebar-brand .name-block .cheq{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.03em;
+    color:#E5433B;
+  }
+  .sidebar-brand .name-block .name{
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .app-sidebar.collapsed .sidebar-brand .name-block{ display:none; }
+
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding:9px 10px;
+    border-radius:8px;
+    color:var(--gray);
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    white-space:nowrap;
+    overflow:hidden;
+    transition:background .15s ease, color .15s ease;
+  }
+  .nav-item:hover{ background:#FAFAF9; }
+  .nav-item.active{ background:var(--track); color:var(--ink); font-weight:600; }
+  .nav-item svg{ width:17px; height:17px; flex:0 0 17px; }
+  .app-sidebar.collapsed .nav-label{ display:none; }
+  .app-sidebar.collapsed .nav-item{ justify-content:center; }
+  .nav-divider{ height:1px; background:var(--border); margin:8px 8px 12px; }
+  .app-sidebar.collapsed .nav-divider{ margin:8px 4px 12px; }
+
+  .nav-domain-block{ margin-bottom:auto; }
+
+  .sidebar-widget-wrap{ margin-top:16px; }
+  .app-sidebar.collapsed .sidebar-widget-wrap{ display:none; }
+
+  .collapse-toggle{
+    width:26px; height:26px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--gray);
+    background:#fff;
+    cursor:pointer;
+    margin-top:12px;
+    flex:0 0 26px;
+    transition:background .15s ease, transform .2s ease;
+  }
+  .collapse-toggle:hover{ background:var(--track); }
+  .collapse-toggle svg{ width:13px; height:13px; transition:transform .25s ease; }
+  .app-sidebar.collapsed .collapse-toggle svg{ transform:rotate(180deg); }
+
+  /* ---- main content: tracking-tag setup step ---- */
+  .app-main{
+    flex:1;
+    background:#fff;
+    padding:44px 40px 40px;
+    overflow:auto;
+  }
+  .step-header{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    margin:0 auto 30px;
+    max-width:620px;
+  }
+  .step-indicator{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .step-dot{
+    width:30px; height:30px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+    font-weight:700;
+  }
+  .step-dot.done{ border:1.5px solid var(--orange); color:var(--orange); }
+  .step-dot.active{ background:var(--orange); color:#fff; }
+  .step-line{ width:64px; height:2px; background:var(--orange); }
+  .step-header h2{
+    font-size:22px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 8px;
+  }
+  .step-header p{
+    font-size:13.5px;
+    color:var(--gray);
+    line-height:1.5;
+    margin:0;
+  }
+  .method-label{
+    text-align:center;
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:16px;
+  }
+  .method-row{
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  .method-card{
+    width:150px;
+    padding:20px 12px;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+    cursor:default;
+  }
+  .method-card.selected{ border-color:var(--orange); background:var(--orange-light); }
+  .method-card .icon-badge{
+    width:38px; height:38px;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .method-card .icon-badge svg{ width:22px; height:22px; }
+  .method-card .label{ font-size:13px; font-weight:500; color:var(--ink); text-align:center; }
+
+  .instructions-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:36px;
+    max-width:900px;
+    margin:0 auto 32px;
+  }
+  .instructions-grid h3{
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .instructions-grid h3 svg{ width:14px; height:14px; color:var(--gray-light); }
+  .option-label{ font-size:13px; font-weight:700; color:var(--ink); margin-bottom:2px; }
+  .option-label em{ font-weight:400; color:var(--gray); font-style:italic; }
+  .option-sub{ font-size:13px; font-weight:700; color:var(--ink); margin-bottom:14px; }
+  .connect-btn{
+    background:var(--orange);
+    color:#fff;
+    border:none;
+    padding:12px 22px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    line-height:1.3;
+    cursor:default;
+    margin-bottom:14px;
+  }
+  .fine-print{
+    font-size:11.5px;
+    color:var(--gray);
+    font-style:italic;
+    line-height:1.5;
+    max-width:230px;
+  }
+  .fine-print a{ color:var(--orange); text-decoration:none; }
+  .manual-steps{ font-size:13px; color:var(--ink); line-height:1.5; }
+  .manual-steps ol{ margin:0; padding-left:18px; }
+  .manual-steps li{ margin-bottom:10px; }
+
+  .step-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    max-width:900px;
+    margin:0 auto;
+    padding-top:8px;
+    border-top:1px solid var(--border);
+  }
+  .back-link{
+    font-size:13px;
+    font-weight:600;
+    color:var(--orange);
+  }
+  .next-btn{
+    background:var(--orange);
+    color:#fff;
+    border:none;
+    padding:10px 26px;
+    border-radius:7px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:default;
+  }
+
+  .stage{
+    display:none;
+  }
+  .stage-label{
+    display:none;
+    color:var(--gray);
+    font-weight:700;
+  }
+
+  .card{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:20px;
+    box-shadow:0 1px 2px rgba(0,0,0,.03), 0 12px 28px -14px rgba(20,20,25,.14);
+    width:440px;
+    padding:30px 32px 26px;
+    position:relative;
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .card.dismissed{
+    opacity:0;
+    transform:scale(.97) translateY(6px);
+    pointer-events:none;
+  }
+
+  .exit-btn{
+    position:absolute;
+    top:18px; right:18px;
+    width:26px; height:26px;
+    border-radius:50%;
+    border:none;
+    background:var(--track);
+    color:var(--gray);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transform:scale(.6);
+    transition:opacity .3s ease, transform .3s cubic-bezier(.34,1.56,.64,1), background .2s ease;
+    pointer-events:none;
+  }
+  .exit-btn.show{ opacity:1; transform:scale(1); pointer-events:auto; }
+  .exit-btn:hover{ background:#E3E1DE; color:var(--ink); }
+  .exit-btn svg{ width:13px; height:13px; }
+
+  .state-screen{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:14px;
+    padding:34px 14px 12px;
+  }
+  .state-icon{
+    width:68px; height:68px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .state-icon svg{ width:30px; height:30px; }
+  .state-icon.complete{ background:var(--orange); color:#fff; }
+  .state-icon.paused{ background:var(--track); color:var(--gray); }
+  .state-title{
+    font-size:19px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .state-sub{
+    font-size:15px;
+    color:var(--gray);
+    line-height:1.45;
+    max-width:270px;
+  }
+  .reopen-btn{
+    margin-top:4px;
+    background:var(--ink-soft);
+    color:#fff;
+    border:none;
+    padding:10px 20px;
+    border-radius:100px;
+    font:inherit;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .2s ease, transform .12s ease;
+  }
+  .reopen-btn:hover{ background:#000; }
+  .reopen-btn:active{ transform:scale(.96); }
+
+  h1.title{
+    font-size:26px;
+    font-weight:700;
+    color:var(--ink);
+    margin:0 0 22px;
+    letter-spacing:-.01em;
+  }
+
+  .progress-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:26px;
+  }
+  .progress-track{
+    flex:1;
+    height:10px;
+    border-radius:100px;
+    background:var(--track);
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:10%;
+    border-radius:100px;
+    background:var(--orange);
+    transition:width .5s cubic-bezier(.4,0,.2,1);
+  }
+  .progress-fill.complete{ background:var(--green); }
+  .progress-count{
+    font-size:16px;
+    color:var(--gray);
+    font-weight:500;
+    white-space:nowrap;
+  }
+
+  .section{ margin-bottom:22px; }
+  .section:last-child{ margin-bottom:0; }
+  .section-label{
+    display:block;
+    font-size:14px;
+    font-weight:600;
+    color:var(--gray);
+    margin-bottom:10px;
+  }
+
+  /* ---- leaf item row ---- */
+  .item{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:6px 12px;
+    border-radius:10px;
+    transition:background .3s ease;
+  }
+  .item.nested{ padding-left:12px; }
+  .item.inprogress{ background:var(--orange-light); }
+
+  .item-icon{
+    width:24px; height:24px;
+    flex:0 0 24px;
+    position:relative;
+    margin-top:1px;
+  }
+  .item-icon svg{ position:absolute; inset:0; width:24px; height:24px; transition:opacity .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1); }
+  .ic-ring{ color:var(--gray-light); opacity:1; transform:scale(1); }
+  .ic-ring-current{ color:var(--orange); opacity:0; transform:scale(1); }
+  .ic-check{ color:var(--green); opacity:0; transform:scale(.5); }
+  .ic-hourglass{ color:var(--gray); opacity:0; transform:scale(1) rotate(0deg); }
+
+  .item.inprogress .ic-ring{ opacity:0; }
+  .item.inprogress .ic-ring-current{ opacity:1; }
+  .item.done .ic-ring{ opacity:0; }
+  .item.done .ic-ring-current{ opacity:0; }
+  .item.done .ic-check{ opacity:1; transform:scale(1); }
+  .item.verifying .ic-ring{ opacity:0; }
+  .item.verifying .ic-hourglass{ opacity:1; animation:tip 2.6s ease-in-out infinite; }
+  @keyframes tip{
+    0%,40%{ transform:rotate(0deg); }
+    50%{ transform:rotate(180deg); }
+    90%,100%{ transform:rotate(180deg); }
+  }
+
+  .item-main{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    cursor:default;
+  }
+  .item-top-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .item-label{
+    font-size:18px;
+    font-weight:600;
+    color:var(--ink);
+    flex:1 1 auto;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .item.done .item-label{ color:var(--ink-soft); }
+  .item.inprogress .item-label,
+  .item.verifying .item-label{ color:var(--ink-soft); }
+
+  .status-sub{
+    font-size:13px;
+    color:var(--gray);
+    line-height:1.4;
+    margin-top:3px;
+    max-width:280px;
+  }
+
+  .info-btn{
+    width:18px; height:18px;
+    border-radius:50%;
+    border:none;
+    background:none;
+    color:var(--gray-light);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    flex:0 0 18px;
+  }
+  .info-btn:hover{ color:var(--gray); }
+  .info-btn svg{ width:18px; height:18px; }
+
+  /* Single floating tooltip, positioned via JS with fixed coords so it can
+     never be clipped by an accordion's overflow:hidden ancestor. */
+  #floatingTooltip{
+    position:fixed;
+    top:0; left:0;
+    background:var(--ink);
+    color:#fff;
+    font-size:12.5px;
+    line-height:1.4;
+    font-weight:500;
+    padding:9px 12px;
+    border-radius:8px;
+    max-width:220px;
+    box-shadow:0 8px 20px -6px rgba(0,0,0,.35);
+    opacity:0;
+    transform:translateY(4px);
+    pointer-events:none;
+    transition:opacity .15s ease, transform .15s ease;
+    z-index:1000;
+  }
+  #floatingTooltip.show{ opacity:1; transform:translateY(0); }
+  #floatingTooltip::after{
+    content:"";
+    position:absolute;
+    border:5px solid transparent;
+  }
+  #floatingTooltip.arrow-top::after{ top:100%; left:var(--arrow-x,50%); transform:translateX(-50%); border-top-color:var(--ink); }
+  #floatingTooltip.arrow-bottom::after{ bottom:100%; left:var(--arrow-x,50%); transform:translateX(-50%); border-bottom-color:var(--ink); }
+
+  .action{
+    flex:0 0 auto;
+    margin-left:auto;
+    font-size:15px;
+    font-weight:600;
+    white-space:nowrap;
+    padding-top:1px;
+  }
+  .action-btn{
+    background:none;
+    border:none;
+    padding:6px 4px;
+    font:inherit;
+    cursor:pointer;
+    border-radius:6px;
+    transition:transform .12s ease, opacity .15s ease;
+  }
+  .action-btn:active{ transform:scale(.94); }
+  .action-btn.is-setup{
+    color:var(--orange);
+    text-decoration:underline;
+    font-weight:600;
+  }
+  .action-btn.is-manage{
+    color:var(--gray);
+    text-decoration:none;
+    font-weight:500;
+  }
+  .action-btn.is-manage:hover{ color:var(--ink-soft); }
+  .action-static{
+    color:var(--gray);
+    padding:6px 4px;
+    cursor:default;
+  }
+
+  /* ---- platform group ---- */
+  .group{ margin-bottom:6px; }
+  .group + .group{ border-top:1px solid var(--border); margin-top:8px; padding-top:10px; }
+  .group-head{
+    display:flex;
+    align-items:center;
+    padding:11px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    user-select:none;
+    transition:background .15s ease;
+  }
+  .group-head:hover{ background:#FAFAF9; }
+  .group-left{
+    display:flex;
+    align-items:center;
+    gap:9px;
+  }
+  .group-name{
+    font-size:18px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .group-count{
+    font-size:14px;
+    font-weight:500;
+    color:var(--gray);
+  }
+  .group-complete{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--green);
+    opacity:0;
+    transform:scale(.85);
+    transition:opacity .3s ease, transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .group-complete.show{ opacity:1; transform:scale(1); }
+  .group-complete svg{ width:16px; height:16px; flex:0 0 16px; }
+  .chevron{
+    width:18px; height:18px;
+    color:var(--gray-light);
+    transition:transform .25s ease;
+    margin-left:auto;
+  }
+  .group.open .chevron{ transform:rotate(180deg); }
+
+  .group-items{
+    display:grid;
+    grid-template-rows:0fr;
+    overflow:hidden;
+    transition:grid-template-rows .32s ease;
+  }
+  .group.open .group-items{ grid-template-rows:1fr; }
+  .group-items-inner{
+    min-height:0;
+    padding-top:2px;
+    padding-bottom:6px;
+    opacity:0;
+    transition:opacity .15s ease;
+  }
+  .group.open .group-items-inner{
+    opacity:1;
+    transition:opacity .2s ease .08s; /* fades in slightly after the height opens */
+  }
+
+  .toast{
+    position:fixed;
+    bottom:28px;
+    left:50%;
+    transform:translateX(-50%) translateY(8px);
+    background:var(--ink);
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:100px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:50;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .foot{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-size:12px;
+    color:var(--gray);
+  }
+  .foot button{
+    background:none; border:none;
+    color:var(--gray);
+    font-size:12px;
+    text-decoration:underline;
+    cursor:pointer;
+    font-family:'Open Sans',sans-serif;
+  }
+  .foot button:hover{ color:var(--ink); }
+
+  /* ---- compact mode: the checklist docked in the sidebar ---- */
+  .card.compact{
+    width:100%;
+    padding:18px 16px 14px;
+    border-radius:12px;
+    box-shadow:none;
+  }
+  .card.compact .exit-btn{ top:12px; right:12px; width:22px; height:22px; }
+  .card.compact .exit-btn svg{ width:11px; height:11px; }
+  .card.compact h1.title{ font-size:15px; margin-bottom:14px; }
+  .card.compact .progress-row{ margin-bottom:16px; gap:10px; }
+  .card.compact .progress-track{ height:6px; }
+  .card.compact .progress-count{ font-size:11.5px; }
+  .card.compact .section{ margin-bottom:14px; }
+  .card.compact .section-label{ font-size:11px; margin-bottom:6px; }
+  .card.compact .item{ padding:4px 4px; gap:8px; }
+  .card.compact .item-icon{ width:16px; height:16px; flex:0 0 16px; }
+  .card.compact .item-icon svg{ width:16px; height:16px; }
+  .card.compact .item-label{ font-size:12.5px; }
+  .card.compact .info-btn{ width:14px; height:14px; flex:0 0 14px; }
+  .card.compact .info-btn svg{ width:14px; height:14px; }
+  .card.compact .action{ font-size:12px; }
+  .card.compact .action-btn{ padding:3px 2px; }
+  .card.compact .status-sub{ font-size:10.5px; max-width:220px; }
+  .card.compact .group-head{ padding:6px 6px; }
+  .card.compact .group-name{ font-size:12.5px; }
+  .card.compact .group-count{ font-size:11.5px; }
+  .card.compact .group-complete{ font-size:11.5px; gap:4px; }
+  .card.compact .group-complete svg{ width:13px; height:13px; }
+  .card.compact .chevron{ width:14px; height:14px; }
+  .card.compact .group + .group{ margin-top:5px; padding-top:6px; }
+  .card.compact .state-screen{ padding:20px 8px 6px; gap:8px; }
+  .card.compact .state-icon{ width:40px; height:40px; }
+  .card.compact .state-icon svg{ width:18px; height:18px; }
+  .card.compact .state-title{ font-size:14px; }
+  .card.compact .state-sub{ font-size:11.5px; max-width:230px; }
+  .card.compact .reopen-btn{ font-size:11.5px; padding:7px 14px; }
+  .card.compact + .foot{ margin-top:8px; }
+</style>
+</head>
+<body>
+
+<div class="brand-label">ClickCease</div>
+
+<div class="app-window">
+  <div class="app-topbar">
+    <span class="crumb">Home</span>
+    <div class="icons">
+      <span class="icon-only">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3a5 5 0 00-5 5v3.2c0 .6-.2 1.2-.6 1.7L5 15.5c-.6.8 0 2 1 2h12c1 0 1.6-1.2 1-2l-1.4-2.6c-.4-.5-.6-1.1-.6-1.7V8a5 5 0 00-5-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 19a2 2 0 004 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </span>
+      <span class="with-label">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M9.5 9.3a2.5 2.5 0 114.2 2c-.5.5-1.2.8-1.2 1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="16.3" r=".9" fill="currentColor"/></svg>
+        Help
+      </span>
+      <div class="divider"></div>
+      <span class="with-label">CHEQ <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div class="divider"></div>
+      <span class="with-label">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 19c1-3 3.5-4.5 6.5-4.5s5.5 1.5 6.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        12312323 <svg class="chev" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <div class="app-sidebar" id="appSidebar">
+      <div class="sidebar-brand">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 3v6c0 5.5-3.5 8.8-8 11-4.5-2.2-8-5.5-8-11V5l8-3z" fill="currentColor"/></svg>
+        </div>
+        <div class="name-block">
+          <span class="cheq">CHEQ</span>
+          <span class="name">ClickCease</span>
+        </div>
+      </div>
+
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 11.5L12 4l8 7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        <span class="nav-label">Home</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 11l16-6-4 16-3.5-6.5L3 11z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="nav-label">Paid marketing</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="nav-label">Bot mitigation</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5.5c0 4.5-3 7.5-7 8.5-4-1-7-4-7-8.5V6l7-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="nav-label">Lead shield</span>
+      </div>
+
+      <div class="nav-divider"></div>
+
+      <div class="nav-domain-block">
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 12h17M12 3.5c2.2 2.3 3.4 5.3 3.4 8.5s-1.2 6.2-3.4 8.5c-2.2-2.3-3.4-5.3-3.4-8.5S9.8 5.8 12 3.5z" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span class="nav-label">Domain management</span>
+        </div>
+      </div>
+
+      <div class="sidebar-widget-wrap">
+        <div class="card compact" id="card">
+          <button class="exit-btn" id="exitBtn" title="Minimize checklist">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+
+          <div id="normalContent">
+            <h1 class="title">Setup checklist</h1>
+
+            <div class="progress-row">
+              <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+              <div class="progress-count" id="progressCount">1 of 10</div>
+            </div>
+
+            <div class="section">
+              <span class="section-label">Foundation</span>
+              <div id="items-foundation"></div>
+            </div>
+
+            <div class="section">
+              <span class="section-label">Platform connections</span>
+              <div id="groups-platforms"></div>
+            </div>
+
+            <div class="section" style="margin-bottom:0;">
+              <span class="section-label">Events</span>
+              <div id="items-events"></div>
+            </div>
+          </div>
+
+          <div class="state-screen" id="completeScreen">
+            <div class="state-icon complete">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M6 12.5l4 4L18 8" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="state-title">You're all set</div>
+            <div class="state-sub">Every core protection is active</div>
+          </div>
+
+          <div class="state-screen" id="pausedScreen">
+            <div class="state-icon paused">
+              <svg viewBox="0 0 24 24" fill="none"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>
+            </div>
+            <div class="state-title">Checklist minimized</div>
+            <div class="state-sub" id="pausedSub"></div>
+            <button class="reopen-btn" id="reopenBtn">Reopen checklist</button>
+          </div>
+        </div>
+        <div class="foot">
+          <button id="resetBtn">Reset demo</button>
+        </div>
+      </div>
+
+      <div class="collapse-toggle" id="collapseToggle" title="Collapse sidebar">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="app-main">
+      <div class="step-header">
+        <div class="step-indicator">
+          <div class="step-dot done">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="step-line"></div>
+          <div class="step-dot active">2</div>
+        </div>
+        <h2>Implement your tracking tag</h2>
+        <p>The tracking tag will enable ClickCease to monitor and block invalid bot activity.<br>Follow the next steps to install it. Note, the code is unique per website.</p>
+      </div>
+
+      <div class="method-label">Select setup method for testdomain.com</div>
+      <div class="method-row">
+        <div class="method-card selected">
+          <div class="icon-badge" style="background:#EAF0FE;">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="2" fill="#4A86F7"/><rect x="13" y="3" width="8" height="8" rx="2" fill="#EA4335" opacity=".85"/><rect x="3" y="13" width="8" height="8" rx="2" fill="#FBBC05" opacity=".9"/><rect x="13" y="13" width="8" height="8" rx="2" fill="#34A853" opacity=".85"/></svg>
+          </div>
+          <span class="label">Google Tag Manager</span>
+        </div>
+        <div class="method-card">
+          <div class="icon-badge" style="background:#F4F4F4;">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="#21759B" stroke-width="1.6"/><path d="M4 11l3 6.5M9 6.5L13 17M15.5 6.5L19 15" stroke="#21759B" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+          <span class="label">WordPress Plugin</span>
+        </div>
+        <div class="method-card">
+          <div class="icon-badge" style="background:#F4F4F4;">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M8 6L3 12l5 6M16 6l5 6-5 6" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="label">Direct Installation</span>
+        </div>
+        <div class="method-card">
+          <div class="icon-badge" style="background:#F4F4F4;">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 5l16 7-16 7 3-7-3-7z" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="label">Email my developer</span>
+        </div>
+      </div>
+
+      <div class="instructions-grid">
+        <div>
+          <h3>Instructions <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.3" stroke="currentColor" stroke-width="1.4"/><path d="M9 8.2v4.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="9" cy="5.7" r="0.9" fill="currentColor"/></svg></h3>
+          <div class="option-label">Option 1 <em>(recommended)</em></div>
+          <div class="option-sub">Direct Installation</div>
+          <button class="connect-btn">Connect with<br>Google Tag Manager</button>
+          <div class="fine-print">CHEQ's use and transfer of information received from Google APIs will adhere to <a href="#">Google's User Data Policy</a>, including the Limited Use requirements.</div>
+        </div>
+        <div>
+          <h3 style="visibility:hidden;">spacer</h3>
+          <div class="option-label">Option 2</div>
+          <div class="option-sub">Manual installation:</div>
+          <div class="manual-steps">
+            <ol>
+              <li>In your Google Tag Manager account, select "Custom HTML."</li>
+              <li>Add the invocation tag provided below.</li>
+              <li>Check the "support document.write" checkbox.</li>
+              <li>Set the tag firing priority to 9999.</li>
+              <li>Set the triggering tag to fire on "Initialization - All Pages"</li>
+              <li>Save and publish the changes.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-footer">
+        <span class="back-link">‹ Back to domain</span>
+        <button class="next-btn">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="floatingTooltip"></div>
+
+<script>
+/* ---------------- data ---------------- */
+const FOUNDATION = [
+  { id:'domain', label:'Domain connection', tip:'Confirms your domain is linked and verified so tracking can run.', status:'done' },
+  { id:'tag', label:'Tracking tag installation', tip:"Once verified, we'll monitor your traffic. This step doesn't block anything on its own.", status:'verifying', statusText:'Verifying — may take up to 24 hours' },
+];
+
+const DESCRIPTIONS = {
+  ip:'Blocks invalid IPs from seeing your ads.',
+  aud:'Removes invalid users from your ad targeting audiences.',
+  utm:'Unlocks campaign and keyword-level breakdown data.',
+};
+
+const PLATFORMS = [
+  { id:'google', name:'Google', open:true, items:[
+    { id:'g-ip', label:'IP blocking', tip:DESCRIPTIONS.ip },
+    { id:'g-aud', label:'Audience exclusion', tip:DESCRIPTIONS.aud },
+    { id:'g-utm', label:'UTM tracking', tip:DESCRIPTIONS.utm },
+  ]},
+  { id:'meta', name:'Meta', open:false, items:[
+    { id:'m-aud', label:'Audience exclusion', tip:DESCRIPTIONS.aud },
+    { id:'m-utm', label:'UTM tracking', tip:DESCRIPTIONS.utm },
+  ]},
+  { id:'microsoft', name:'Microsoft', open:false, items:[
+    { id:'ms-aud', label:'Audience exclusion', tip:DESCRIPTIONS.aud },
+    { id:'ms-utm', label:'UTM tracking', tip:DESCRIPTIONS.utm },
+  ]},
+];
+
+const EVENTS = [
+  { id:'pixel', label:'Pixel guard', tip:'Protects your conversion tracking pixel from tampering.', status:'pending' },
+];
+
+</script>
+<script>
+/* ---------------- state ---------------- */
+const state = {};
+FOUNDATION.forEach(i => state[i.id] = i.status);
+PLATFORMS.forEach(p => p.items.forEach(i => state[i.id] = 'pending'));
+EVENTS.forEach(i => state[i.id] = i.status);
+
+const MAX = 10; // total items shown in the "X of 10" count
+const REQUIRED = 9; // domain(1) + google(3) + meta(2) + microsoft(2) + pixel(1) — the tag
+                     // sits in "verifying" indefinitely and was never meant to be user-completable,
+                     // so 9/10 is the realistic ceiling and counts as "fully set up"
+let anyPlatformComplete = false;
+let openGroup = 'google';
+
+/* ---------------- icon markup ---------------- */
+function iconSvg(){
+  return `
+    <svg class="ic-ring" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/></svg>
+    <svg class="ic-ring-current" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/></svg>
+    <svg class="ic-check" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="currentColor"/><path d="M7 12.5l3.2 3.2L17.5 8" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg class="ic-hourglass" viewBox="0 0 24 24" fill="none">
+      <path d="M7 3h10M7 21h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M7.5 3.3c0 3.6 2 5.6 4.5 6.7 2.5-1.1 4.5-3.1 4.5-6.7M7.5 20.7c0-3.6 2-5.6 4.5-6.7 2.5 1.1 4.5 3.1 4.5 6.7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    </svg>
+  `;
+}
+function infoSvg(){
+  return `<svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7.3" stroke="currentColor" stroke-width="1.4"/><path d="M9 8.2v4.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="9" cy="5.7" r="0.9" fill="currentColor"/></svg>`;
+}
+
+
+/* ---------------- render leaf item ---------------- */
+function itemRow(item, nested){
+  const st = state[item.id];
+  const cls = ['item'];
+  if(st==='inprogress') cls.push('inprogress');
+  if(st==='done') cls.push('done');
+  if(st==='verifying') cls.push('verifying');
+  if(nested) cls.push('nested');
+
+  const statusSub = (st==='verifying' && item.statusText) ? `<div class="status-sub">${item.statusText}</div>` : '';
+
+  let actionHtml = '';
+  if(st==='pending') actionHtml = `<button class="action-btn is-setup" data-action="${item.id}">Set up</button>`;
+  else if(st==='inprogress') actionHtml = `<span class="action-static">In progress</span>`;
+  else if(st==='done') actionHtml = `<button class="action-btn is-manage" data-action="${item.id}" data-manage="1">Manage</button>`;
+  // verifying: no action
+
+  return `
+    <div class="${cls.join(' ')}" data-id="${item.id}">
+      <div class="item-icon">${iconSvg()}</div>
+      <div class="item-main">
+        <div class="item-top-row">
+          <span class="item-label">${item.label}</span>
+          <button class="info-btn" data-tip-text="${item.tip}">${infoSvg()}</button>
+          <div class="action">${actionHtml}</div>
+        </div>
+        ${statusSub}
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------- render sections ---------------- */
+function renderFoundation(){
+  document.getElementById('items-foundation').innerHTML = FOUNDATION.map(i => itemRow(i,false)).join('');
+}
+function renderEvents(){
+  document.getElementById('items-events').innerHTML = EVENTS.map(i => itemRow(i,false)).join('');
+}
+function renderPlatforms(){
+  document.getElementById('groups-platforms').innerHTML = PLATFORMS.map(p => {
+    const doneCount = p.items.filter(i => state[i.id]==='done').length;
+    const isOpen = openGroup === p.id;
+    const complete = doneCount === p.items.length;
+    return `
+      <div class="group ${isOpen?'open':''}" data-group="${p.id}">
+        <div class="group-head" data-toggle="${p.id}">
+          <div class="group-left">
+            <span class="group-name">${p.name}</span>
+            ${complete
+              ? `<span class="group-complete show"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="currentColor" opacity=".15"/><path d="M6.5 12.5l3.5 3.5L18 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Fully protected</span>`
+              : `<span class="group-count">${doneCount}/${p.items.length}</span>`
+            }
+          </div>
+          <svg class="chevron" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="group-items"><div class="group-items-inner">
+          ${p.items.map(i => itemRow(i,true)).join('')}
+        </div></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function totalDone(){
+  return Object.values(state).filter(s => s==='done').length;
+}
+
+function updateHeader(){
+  const done = totalDone();
+  const pct = Math.round((done/MAX)*100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressFill').classList.toggle('complete', done>=REQUIRED);
+  document.getElementById('progressCount').textContent = `${done} of ${MAX}`;
+  const hintEl = document.getElementById('hint');
+  if(hintEl) hintEl.textContent = done>=REQUIRED
+    ? 'All steps complete'
+    : 'Click "Set up" to complete the highlighted step';
+  renderCardState();
+}
+
+let cardPaused = false;
+
+function renderCardState(){
+  const done = totalDone();
+  const complete = done >= REQUIRED;
+  const normal = document.getElementById('normalContent');
+  const completeScreen = document.getElementById('completeScreen');
+  const pausedScreen = document.getElementById('pausedScreen');
+  const exitBtn = document.getElementById('exitBtn');
+
+  if(complete){
+    normal.style.display = 'none';
+    pausedScreen.style.display = 'none';
+    completeScreen.style.display = 'flex';
+    exitBtn.classList.remove('show');
+  } else if(cardPaused){
+    normal.style.display = 'none';
+    completeScreen.style.display = 'none';
+    pausedScreen.style.display = 'flex';
+    exitBtn.classList.remove('show');
+    const remaining = REQUIRED - done;
+    document.getElementById('pausedSub').textContent =
+      `${remaining} of ${MAX} protections still need setup. You can reopen this checklist anytime from Settings → Setup checklist.`;
+  } else {
+    normal.style.display = 'block';
+    completeScreen.style.display = 'none';
+    pausedScreen.style.display = 'none';
+    exitBtn.classList.toggle('show', anyPlatformComplete);
+  }
+}
+
+function renderAll(){
+  renderFoundation();
+  renderPlatforms();
+  renderEvents();
+  updateHeader();
+  bindEvents();
+}
+
+/* ---------------- interactions ---------------- */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+/* Floating tooltip — a single fixed-position element positioned via JS so it
+   is never clipped by an accordion group's overflow:hidden. */
+const floatingTip = document.getElementById('floatingTooltip');
+let tipOwner = null;
+
+function positionTip(btn){
+  const rect = btn.getBoundingClientRect();
+  floatingTip.textContent = btn.dataset.tipText;
+  floatingTip.classList.remove('arrow-top','arrow-bottom');
+  const tw = floatingTip.offsetWidth;
+  const th = floatingTip.offsetHeight;
+  const spaceAbove = rect.top;
+  let top, arrowClass;
+  if(spaceAbove > th + 16){
+    top = rect.top - th - 10;
+    arrowClass = 'arrow-top';
+  } else {
+    top = rect.bottom + 10;
+    arrowClass = 'arrow-bottom';
+  }
+  let left = rect.left + rect.width/2 - tw/2;
+  left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+  const arrowX = (rect.left + rect.width/2 - left) + 'px';
+  floatingTip.style.setProperty('--arrow-x', arrowX);
+  floatingTip.style.top = top + 'px';
+  floatingTip.style.left = left + 'px';
+  floatingTip.classList.add(arrowClass);
+}
+function showTip(btn){
+  positionTip(btn);
+  floatingTip.classList.add('show');
+  tipOwner = btn;
+}
+function hideTip(){
+  floatingTip.classList.remove('show');
+  tipOwner = null;
+}
+
+document.addEventListener('mouseover', (e) => {
+  const btn = e.target.closest('.info-btn');
+  if(btn) showTip(btn);
+});
+document.addEventListener('mouseout', (e) => {
+  const btn = e.target.closest('.info-btn');
+  if(btn && btn === tipOwner && !e.relatedTarget?.closest?.('.info-btn')) hideTip();
+});
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.info-btn');
+  if(btn){
+    e.stopPropagation();
+    if(tipOwner === btn) hideTip();
+    else showTip(btn);
+    return;
+  }
+  hideTip();
+});
+window.addEventListener('scroll', hideTip, true);
+
+function startSetup(id){
+  if(state[id] !== 'pending') return;
+  state[id] = 'inprogress';
+  renderAll();
+  setTimeout(() => {
+    state[id] = 'done';
+    renderAll();
+    checkGroupCompletion(id);
+  }, 1300);
+}
+
+function checkGroupCompletion(finishedId){
+  const platform = PLATFORMS.find(p => p.items.some(i => i.id === finishedId));
+  if(!platform) return;
+  const allDone = platform.items.every(i => state[i.id]==='done');
+  if(allDone){
+    anyPlatformComplete = true;
+    updateHeader();
+    setTimeout(() => {
+      if(openGroup === platform.id){
+        openGroup = null;
+      }
+      renderAll();
+    }, 1500);
+  }
+}
+
+function bindEvents(){
+  document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.action;
+      if(btn.dataset.manage){
+        showToast('Already set up — nothing to change');
+        return;
+      }
+      startSetup(id);
+    });
+  });
+
+  document.querySelectorAll('[data-toggle]').forEach(head => {
+    head.addEventListener('click', () => {
+      const id = head.dataset.toggle;
+      openGroup = (openGroup === id) ? null : id;
+      renderAll();
+    });
+  });
+
+  document.querySelectorAll('.item-main').forEach(el => {
+    el.addEventListener('click', (e) => e.stopPropagation());
+  });
+}
+
+document.getElementById('exitBtn').addEventListener('click', () => {
+  cardPaused = true;
+  renderCardState();
+  showToast('Checklist minimized');
+});
+
+document.getElementById('reopenBtn').addEventListener('click', () => {
+  cardPaused = false;
+  renderCardState();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  FOUNDATION.forEach(i => state[i.id] = i.status);
+  PLATFORMS.forEach(p => p.items.forEach(i => state[i.id] = 'pending'));
+  EVENTS.forEach(i => state[i.id] = i.status);
+  cardPaused = false;
+  anyPlatformComplete = false;
+  openGroup = 'google';
+  document.getElementById('card').classList.remove('dismissed');
+  renderAll();
+});
+
+document.getElementById('collapseToggle').addEventListener('click', () => {
+  document.getElementById('appSidebar').classList.toggle('collapsed');
+});
+
+// Tracking tag installation just sits in "verifying" — that check genuinely
+// takes real time in production, so the demo doesn't fake-resolve it. The
+// hourglass keeps a slow idle tick so it still reads as alive, not frozen.
+renderAll();
+</script>
+</body>
+</html>
