@@ -161,7 +161,8 @@
     border-radius:5px;
     padding:4px 8px;
     margin:2px 4px 6px;
-    white-space:nowrap;
+    white-space:normal;
+    line-height:1.4;
     transform:rotate(-1deg);
     box-shadow:0 4px 10px -4px rgba(0,0,0,.2);
   }
@@ -569,12 +570,15 @@
     display:flex; align-items:center; justify-content:center;
   }
   .pp-item-icon.done svg{ width:10px; height:10px; }
-  .pp-item-label{ flex:1; font-size:13px; color:var(--ink); }
+  .pp-item-label{ flex:0 1 auto; font-size:13px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .pp-item-row .info-btn{ width:14px; height:14px; flex:0 0 14px; margin-left:-3px; }
+  .pp-item-row .info-btn svg{ width:14px; height:14px; }
   .pp-action{
     background:none; border:none; font:inherit; font-size:12.5px; font-weight:600;
-    cursor:pointer; padding:2px 4px;
+    cursor:pointer; padding:2px 4px; margin-left:auto; white-space:nowrap;
   }
   .pp-action.setup{ color:var(--orange); text-decoration:underline; }
+  .pp-action-static{ color:var(--gray); font-weight:500; cursor:default; }
   .pp-action.manage{ color:var(--gray); }
   .pp-cta{
     width:100%;
@@ -1225,7 +1229,7 @@
           <div class="nav-sub-item" id="navPlatformProtection" data-nav-goto="platform-protection">Platform Protection</div>
           <div class="nav-sub-item">Detection settings</div>
         </div>
-        <div class="nav-annotation">📌 Click here to view your protections</div>
+        <div class="nav-annotation">📌 Click Paid marketing → Platform Protection to see your protections</div>
       </div>
       <div class="nav-item">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -1781,11 +1785,28 @@ function showView(view){
   document.getElementById('interstitialView').style.display = view === 'interstitial' ? 'block' : 'none';
 }
 
+function dynamicFooterHtml(itemId){
+  const platform = platformForItem(itemId);
+  // Last unfinished protection in its platform (or a standalone item like Pixel Guard) says "Done"
+  const othersPending = platform
+    ? platform.items.some(i => i.id !== itemId && state[i.id] !== 'done')
+    : false;
+  const label = othersPending ? 'Next' : 'Done';
+  return `<div class="modal-foot"><button class="modal-cancel" data-modal-cancel="1">Cancel</button><button class="modal-primary" data-modal-primary="1">${label}</button></div>`;
+}
+
 function openModal(itemId){
   const cfg = MODALS[itemId];
   if(!cfg){ startSetup(itemId); return; }
-  lastMainView = currentMainView();
+  if(currentModalItem === null) lastMainView = currentMainView();
+  abandonModalItem();
   currentModalItem = itemId;
+  if(state[itemId] === 'pending'){
+    state[itemId] = 'inprogress';
+    const owner = platformForItem(itemId);
+    if(owner) openGroup = owner.id;
+    renderAll();
+  }
   const card = document.getElementById('modalCard');
   const skipDivider = !!cfg.stepper;
   const notes = cfg.noSourceScreen
@@ -1797,15 +1818,22 @@ function openModal(itemId){
     ${cfg.stepper || ''}
     ${skipDivider ? '' : '<div class="modal-divider"></div>'}
     <div class="modal-body">${notes}${cfg.body}</div>
-    ${cfg.footer}
+    ${dynamicFooterHtml(itemId)}
   `;
   showView('modal');
   document.querySelectorAll('[data-modal-cancel]').forEach(b => b.addEventListener('click', closeModal));
   document.querySelectorAll('[data-modal-primary]').forEach(b => b.addEventListener('click', completeCurrentModal));
 }
-function closeModal(){
-  showView(lastMainView);
+function abandonModalItem(){
+  if(currentModalItem && state[currentModalItem] === 'inprogress'){
+    state[currentModalItem] = 'pending';
+    renderAll();
+  }
   currentModalItem = null;
+}
+function closeModal(){
+  abandonModalItem();
+  showView(lastMainView);
 }
 function completeCurrentModal(){
   const id = currentModalItem;
@@ -1844,8 +1872,11 @@ function ppItemRow(item){
     : `<span class="pp-item-icon"></span>`;
   const actionHtml = st === 'done'
     ? `<button class="pp-action manage" data-pp-manage="${item.id}">Manage</button>`
-    : `<button class="pp-action setup" data-pp-action="${item.id}">Set up</button>`;
-  return `<div class="pp-item-row">${iconHtml}<span class="pp-item-label">${item.label}</span>${actionHtml}</div>`;
+    : st === 'inprogress'
+      ? `<span class="pp-action pp-action-static">In progress</span>`
+      : `<button class="pp-action setup" data-pp-action="${item.id}">Set up</button>`;
+  const infoHtml = `<button class="info-btn" data-tip-text="${item.tip}">${infoSvg()}</button>`;
+  return `<div class="pp-item-row">${iconHtml}<span class="pp-item-label">${item.label}</span>${infoHtml}${actionHtml}</div>`;
 }
 function ppDropdownHtml(p){
   const rows = p.items.map(i => {
@@ -2069,6 +2100,7 @@ document.addEventListener('click', (e) => {
 });
 
 function goToPlatformProtection(){
+  abandonModalItem();
   renderPlatformProtectionPage();
   showView('platform-protection');
   document.getElementById('navHome').classList.remove('active');
@@ -2077,6 +2109,7 @@ function goToPlatformProtection(){
   document.getElementById('navPlatformProtection').classList.add('active');
 }
 function goHome(){
+  abandonModalItem();
   showView('placeholder');
   document.getElementById('navPaidGroup').classList.remove('open');
   document.querySelectorAll('.nav-sub-item').forEach(el => el.classList.remove('active'));
@@ -2108,8 +2141,14 @@ function checkGroupCompletion(finishedId){
     anyPlatformComplete = true;
     updateHeader();
     setTimeout(() => {
-      if(openGroup === platform.id){
-        openGroup = null;
+      if(openGroup === platform.id || openGroup === null){
+        const start = PLATFORMS.findIndex(p => p.id === platform.id);
+        let next = null;
+        for(let step = 1; step < PLATFORMS.length; step++){
+          const cand = PLATFORMS[(start + step) % PLATFORMS.length];
+          if(cand.items.some(i => state[i.id] !== 'done')){ next = cand; break; }
+        }
+        openGroup = next ? next.id : null;
       }
       renderAll();
     }, 1500);
