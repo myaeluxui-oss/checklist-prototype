@@ -1721,11 +1721,11 @@ const MODALS = {
       <ul>
         <li>If the five UTM parameters are set, there's no need to add additional parameters.</li>
         <li>If only <b>utm_source</b> and <b>utm_campaign</b> exist, add the following to the UTM structure:
-          <div class="modal-code" style="margin-top:8px;">cq_net={{ site_source_name }}&cq_plt=fp</div>
+          <div class="modal-code" style="margin-top:8px;">cq_net=&#123;&#123; site_source_name &#125;&#125;&cq_plt=fp</div>
           <div class="modal-copy">${ICON_COPY} Copy code</div>
         </li>
         <li>If utm_source and utm_campaign aren't set, add the following cq_params to the UTM structure across all ads:
-          <div class="modal-code" style="margin-top:8px;">cq_src=facebook&cq_cmp={{campaign.name}}&cq_con={{ad.name}}&cq_med={{placement}}&cq_net={{site_source_name}}&cq_plt=fp</div>
+          <div class="modal-code" style="margin-top:8px;">cq_src=facebook&cq_cmp=&#123;&#123;campaign.name&#125;&#125;&cq_con=&#123;&#123;ad.name&#125;&#125;&cq_med=&#123;&#123;placement&#125;&#125;&cq_net=&#123;&#123;site_source_name&#125;&#125;&cq_plt=fp</div>
           <div class="modal-copy">${ICON_COPY} Copy code</div>
         </li>
       </ul>`,
