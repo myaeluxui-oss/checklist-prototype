@@ -579,6 +579,9 @@
   }
   .pp-action.setup{ color:var(--orange); text-decoration:underline; }
   .pp-action-static{ color:var(--gray); font-weight:500; cursor:default; }
+  .pp-status{ display:flex; align-items:center; gap:7px; color:var(--green); font-size:13.5px; font-weight:600; padding:4px 0 2px; }
+  .pp-status svg{ width:17px; height:17px; flex:0 0 17px; }
+  .pp-name + .pp-items, .pp-name + .pp-status{ margin-top:12px; }
   .pp-action.manage{ color:var(--gray); }
   .pp-cta{
     width:100%;
@@ -1842,7 +1845,11 @@ function completeCurrentModal(){
     state[id] = 'done';
     renderAll();
     checkGroupCompletion(id);
-    renderInterstitial(id);
+    if(lastMainView === 'platform-protection'){
+      showView('platform-protection');
+    } else {
+      renderInterstitial(id);
+    }
   } else {
     showView(lastMainView);
   }
@@ -1871,7 +1878,7 @@ function ppItemRow(item){
     ? `<span class="pp-item-icon done"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
     : `<span class="pp-item-icon"></span>`;
   const actionHtml = st === 'done'
-    ? `<button class="pp-action manage" data-pp-manage="${item.id}">Manage</button>`
+    ? ''
     : st === 'inprogress'
       ? `<span class="pp-action pp-action-static">In progress</span>`
       : `<button class="pp-action setup" data-pp-action="${item.id}">Set up</button>`;
@@ -1879,30 +1886,27 @@ function ppItemRow(item){
   return `<div class="pp-item-row">${iconHtml}<span class="pp-item-label">${item.label}</span>${infoHtml}${actionHtml}</div>`;
 }
 function ppDropdownHtml(p){
-  const rows = p.items.map(i => {
-    const st = state[i.id];
-    const isDone = st === 'done';
-    const attr = isDone ? `data-pp-manage="${i.id}"` : `data-pp-action="${i.id}"`;
-    return `<div class="pp-menu-row"><span class="pp-menu-label">${i.label}</span><button class="pp-menu-action ${isDone?'manage':'setup'}" ${attr}>${isDone?'Manage':'Set up'}</button></div>`;
-  }).join('');
+  const allDone = p.items.every(i => state[i.id] === 'done');
+  const manageRows = allDone ? p.items.map(i =>
+    `<div class="pp-menu-row"><span class="pp-menu-label">${i.label}</span><button class="pp-menu-action manage" data-pp-manage="${i.id}">Manage</button></div>`
+  ).join('') + '<div class="pp-menu-divider"></div>' : '';
   return `
     <div class="pp-dropdown" id="pp-dropdown-${p.id}">
-      <div class="pp-menu-title">${p.name}</div>
-      ${rows}
+      ${allDone ? `<div class="pp-menu-title">${p.name}</div>` : ''}
+      ${manageRows}
+      <button class="pp-menu-add" data-pp-add="${p.id}">Add another account</button>
       <div class="pp-menu-divider"></div>
-      <button class="pp-menu-add" data-pp-add="${p.id}">
-        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        Add another account
-      </button>
-      <div class="pp-menu-divider"></div>
-      <button class="pp-menu-disable" data-pp-disable="${p.id}">Disable ${p.name} account</button>
+      <button class="pp-menu-disable" data-pp-disable="${p.id}">Disable account</button>
     </div>`;
 }
 function ppCardHtml(p){
   const doneCount = p.items.filter(i => state[i.id] === 'done').length;
   const total = p.items.length;
   const allDone = doneCount === total;
-  const ctaLabel = doneCount === 0 ? `Get started with ${p.name}` : (allDone ? 'Fully protected' : 'Continue setup');
+  const ctaLabel = doneCount === 0 ? `Get started with ${p.name}` : 'Continue setup';
+  const bottomHtml = allDone
+    ? `<div class="pp-status"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/><path d="M7 12.5l3.2 3.2L17 8.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Fully protected</div>`
+    : `<button class="pp-cta" data-pp-cta="${p.id}">${ctaLabel}</button>`;
   return `
     <div class="pp-card">
       <div class="pp-card-head">
@@ -1912,9 +1916,9 @@ function ppCardHtml(p){
         </button>
       </div>
       <div class="pp-name">${p.name}</div>
-      <div class="pp-progress ${allDone?'complete':''}">${doneCount} of ${total} protected</div>
-      <div class="pp-items">${p.items.map(ppItemRow).join('')}</div>
-      <button class="pp-cta ${allDone?'done':''}" data-pp-cta="${p.id}" ${allDone?'disabled':''}>${ctaLabel}</button>
+      ${allDone ? '' : `<div class="pp-progress">${doneCount} of ${total} protected</div>`}
+      ${allDone ? '' : `<div class="pp-items">${p.items.map(ppItemRow).join('')}</div>`}
+      ${bottomHtml}
       ${ppDropdownHtml(p)}
     </div>`;
 }
